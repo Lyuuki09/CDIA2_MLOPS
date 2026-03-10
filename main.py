@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from typing import Optional
+from pydantic import BaseModel
 
 app = FastAPI(
     title="Bella Tavola API",
@@ -27,38 +28,55 @@ pratos = [
     {'id': 7, 'nome': 'vinho carreteiro', 'categoria': 'bebidas', 'preco': 10.0, "disponivel": True}
 ]
 
+class Inserir_Prato(BaseModel):
+    nome: str
+    categoria: str
+    preco: float
+    disponivel: bool = True
+
+@app.post('/pratos')
+async def criar_prato(prato: PratoInput):
+    novo_id = max(p['id'] for p in pratos) + 1
+    novo_prato = {'id': novo_id, **pratos.model_dump()}
+    pratos.append(novo_prato)
+
+
 @app.get("/cardapio")
-async def listar_pratos(
+async def olhar_cardapio(
     categoria: Optional[str] = None,
-    preco_maximo: Optional[float] = None
+    preco_maximo: Optional[float] = None,
+    apenas_disponivel: bool = False
 ):
     resultado = pratos
 
     if categoria:
         resultado = [p for p in resultado if p["categoria"] == categoria]
-
     if preco_maximo:
         resultado = [p for p in resultado if p["preco"] <= preco_maximo]
-
+    if apenas_disponivel:
+        resultado = [p for p in resultado if p['disponivel']] 
     return resultado
 
-@app.get('/cardapio/{prato_id}')
-async def buscar_prato(prato_id: int):
+@app.get("/cardapio/{prato_id}")
+async def detalhar_prato(prato_id: int, formato: str = 'completo'):
     for prato in pratos:
-        if prato['id'] == prato_id:
-            return prato
-    return {'Mensagem': 'Prato não encontrado, qui qui qui qui!'}
-
-@app.get("cardapio/{prato_id}/detalhes")
-async def detalhes_prato(
-    prato_id: int,
-    incluir_ingredientes: bool = False,
-    
-):
-    for prato in pratos:
-        if prato['id'] == prato_id:
-            if incluir_ingredientes:
-                return {**prato, 'ingedientes':['...lista...']}
+        if prato['id'] == prato_id :
+            if formato == "resumido":
+                return {"nome": prato['nome'], 'preço': prato['preco']}
             return prato
     return {'mensagem': 'Prato não encontrado'}
-        
+
+
+
+
+
+
+
+# @app.get('/cardapio/{prato_id}')
+# async def buscar_prato(prato_id: int):
+#     for prato in pratos:
+#         if prato['id'] == prato_id:
+#             return prato
+#     return {'Mensagem': 'Prato não encontrado, qui qui qui qui!'}
+
+
