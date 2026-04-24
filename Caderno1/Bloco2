@@ -1,0 +1,16 @@
+from fastapi import HTTPException
+from pydantic import Field
+
+# Exemplo de atualização de modelo com validação
+class VeiculoInput(BaseModel):
+    modelo: str = Field(min_length=5, max_length=80)
+    categoria: str = Field(pattern="^(sedan|esportivo|picape|conversivel)$")
+    orcamento: float = Field(gt=1000)
+
+@app.get("/veiculos/{veiculo_id}")
+async def buscar_veiculo(veiculo_id: int):
+    for v in veiculos:
+        if v["id"] == veiculo_id:
+            return v
+    # Erro semântico correto para recurso não encontrado
+    raise HTTPException(status_code=404, detail="Veículo não encontrado")

@@ -1,0 +1,30 @@
+# Arquivo: main.py
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI(title="Garage Vintage API", version="1.0.0")
+
+# Simulação de banco de dados em memória
+veiculos = [
+    {"id": 1, "modelo": "Fusca 1968", "categoria": "sedan", "orcamento": 15000.0},
+    {"id": 2, "modelo": "Opala SS", "categoria": "esportivo", "orcamento": 45000.0},
+]
+
+class VeiculoInput(BaseModel):
+    modelo: str
+    categoria: str
+    orcamento: float
+
+@app.get("/veiculos")
+async def listar_veiculos(categoria: Optional[str] = None):
+    if categoria:
+        return [v for v in veiculos if v["categoria"] == categoria]
+    return veiculos
+
+@app.post("/veiculos")
+async def criar_veiculo(veiculo: VeiculoInput):
+    novo_id = max(v["id"] for v in veiculos) + 1
+    novo_veiculo = {"id": novo_id, **veiculo.model_dump()}
+    veiculos.append(novo_veiculo)
+    return novo_veiculo

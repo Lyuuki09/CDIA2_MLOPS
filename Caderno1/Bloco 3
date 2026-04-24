@@ -1,0 +1,14 @@
+# routers/veiculos.py
+from fastapi import APIRouter
+from models.veiculo import VeiculoInput # Supondo modelos em pasta separada [cite: 1198]
+
+router = APIRouter()
+
+@router.get("/")
+async def listar():
+    return {"mensagem": "Lista de veículos da oficina"}
+
+# main.py (Ponto de entrada unificado)
+from routers import veiculos
+
+app.include_router(veiculos.router, prefix="/veiculos", tags=["Veículos"])
